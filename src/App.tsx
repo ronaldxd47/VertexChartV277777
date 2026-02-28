@@ -437,13 +437,19 @@ export default function App() {
                   <Zap className="w-4 h-4" /> Generate Code
                 </h2>
                 <div className="grid grid-cols-1 gap-3">
-                  {[3, 7, 30].map(days => (
+                  {[
+                    { label: '1 HOUR', days: 1/24 },
+                    { label: '5 HOURS', days: 5/24 },
+                    { label: '3 DAYS', days: 3 },
+                    { label: '7 DAYS', days: 7 },
+                    { label: '30 DAYS', days: 30 }
+                  ].map(option => (
                     <button 
-                      key={days}
-                      onClick={() => generateCode(days)}
+                      key={option.label}
+                      onClick={() => generateCode(option.days)}
                       className="w-full bg-white/5 hover:bg-gold/10 hover:border-gold/30 border border-white/5 py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-between px-6 group"
                     >
-                      <span className="text-gray-400 group-hover:text-gold">{days} DAYS ACCESS</span>
+                      <span className="text-gray-400 group-hover:text-gold">{option.label} ACCESS</span>
                       <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-gold" />
                     </button>
                   ))}
@@ -474,7 +480,11 @@ export default function App() {
                         accessCodes.map((item) => (
                           <tr key={item.code} className="hover:bg-white/5 transition-colors group">
                             <td className="px-8 py-4 font-serif italic text-gold font-bold tracking-widest">{item.code}</td>
-                            <td className="px-8 py-4 text-sm text-gray-400">{item.duration} Days</td>
+                            <td className="px-8 py-4 text-sm text-gray-400">
+                              {item.duration < 1 
+                                ? `${Math.round(item.duration * 24)} Hours` 
+                                : `${item.duration} Days`}
+                            </td>
                             <td className="px-8 py-4 text-xs text-gray-500">
                               {new Date(item.expiry).toLocaleDateString()}
                               <div className="text-[10px] opacity-50">{new Date(item.expiry).toLocaleTimeString()}</div>
