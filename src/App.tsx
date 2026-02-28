@@ -61,6 +61,7 @@ export default function App() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const isGeminiConfigured = !!process.env.GEMINI_API_KEY;
   const [isLoadingData, setIsLoadingData] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,9 +125,39 @@ export default function App() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Basic image compression/resizing
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Max dimension 1280px
+          const maxDim = 1280;
+          if (width > height) {
+            if (width > maxDim) {
+              height *= maxDim / width;
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width *= maxDim / height;
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Use JPEG with 0.8 quality
+          const compressed = canvas.toDataURL('image/jpeg', 0.8);
+          setImage(compressed);
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -154,9 +185,9 @@ export default function App() {
       }
 
       setHistory(prev => [data, ...prev].slice(0, 20));
-    } catch (err) {
-      console.error(err);
-      setError('Analysis failed. Please try again.');
+    } catch (err: any) {
+      console.error('Analysis error:', err);
+      setError(err.message || 'Analysis failed. Please try again.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -297,6 +328,22 @@ export default function App() {
               <div className="scanline opacity-5" />
               
               <div className="space-y-6 relative z-10">
+                {(!isSupabaseConfigured || !isGeminiConfigured) && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 space-y-2">
+                    {!isSupabaseConfigured && (
+                      <div className="flex items-center gap-2 text-red-400 text-[10px] font-mono uppercase">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        Database Not Configured (Using Local)
+                      </div>
+                    )}
+                    {!isGeminiConfigured && (
+                      <div className="flex items-center gap-2 text-red-400 text-[10px] font-mono uppercase">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        AI Analysis Not Configured
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Access Code</label>
