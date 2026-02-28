@@ -1,0 +1,5 @@
+{
+  "name": "VertexChart",
+  "description": "Advanced Forex analysis tool using SNR, ICT, STD, and Alchemist methods with real-time macro fundamental insights.",
+  "requestFramePermissions": ["camera"]
+}
